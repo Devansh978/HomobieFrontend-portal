@@ -1,0 +1,117 @@
+// Enums
+export const userRoleEnum = pgEnum("user_role", [
+  "super_admin",
+  "admin", 
+  "ca",
+  "builder",
+  "broker",
+  "user"
+]);
+
+export const leadStatusEnum = pgEnum("lead_status", [
+  "new",
+  "contacted",
+  "documents_requested",
+  "documents_received",
+  "under_review",
+  "approved",
+  "rejected",
+  "disbursed"
+]);
+
+export const loanTypeEnum = pgEnum("loan_type", [
+  "home_loan",
+  "loan_against_property",
+  "business_loan"
+]);
+
+export const auditActionEnum = pgEnum("audit_action", [
+  "create",
+  "update", 
+  "delete",
+  "login",
+  "logout",
+  "assign",
+  "status_change"
+]);
+
+export const projectStatusEnum = pgEnum("project_status", [
+  "planning",
+  "construction", 
+  "ready",
+  "sold"
+]);
+
+export const telecallerStatusEnum = pgEnum("telecaller_status", [
+  "active",
+  "busy",
+  "offline",
+  "break"
+]);
+
+export const documentStatusEnum = pgEnum("document_status", [
+  "pending",
+  "approved",
+  "rejected",
+  "urgent"
+]);
+
+export const priorityEnum = pgEnum("priority", [
+  "high",
+  "medium",
+  "low"
+]);
+
+// Users table
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  role: userRoleEnum("role").notNull().default("user"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Leads table
+export const leads = pgTable("leads", {
+  id: serial("id").primaryKey(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull(),
+  loanType: loanTypeEnum("loan_type").notNull(),
+  loanAmount: integer("loan_amount").notNull(),
+  status: leadStatusEnum("status").notNull().default("new"),
+  assignedToId: integer("assigned_to_id"),
+  createdById: integer("created_by_id").notNull(),
+  notes: text("notes"),
+  metadata: jsonb("metadata").$type<Record<string, any>>(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Lead timeline table
+export const leadTimeline = pgTable("lead_timeline", {
+  id: serial("id").primaryKey(),
+  leadId: integer("lead_id").notNull(),
+  status: leadStatusEnum("status").notNull(),
+  notes: text("notes"),
+  changedById: integer("changed_by_id").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Documents table
+export const documents = pgTable("documents", {
+  id: serial("id").primaryKey(),
+  leadId: integer("lead_id").notNull(),
+  fileName: text("file_name").notNull(),
+  filePath: text("file_path").notNull(),
+  fileSize: integer("file_size").notNull(),
+  mimeType: text("mime_type").notNull(),
+  uploadedById: integer("uploaded_by_id").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});

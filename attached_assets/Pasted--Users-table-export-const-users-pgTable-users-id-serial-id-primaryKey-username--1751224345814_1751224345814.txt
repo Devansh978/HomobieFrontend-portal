@@ -1,0 +1,53 @@
+// Users table
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  role: userRoleEnum("role").notNull().default("user"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Leads table
+export const leads = pgTable("leads", {
+  id: serial("id").primaryKey(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull(),
+  loanType: loanTypeEnum("loan_type").notNull(),
+  loanAmount: integer("loan_amount").notNull(),
+  status: leadStatusEnum("status").notNull().default("new"),
+  assignedToId: integer("assigned_to_id"),
+  createdById: integer("created_by_id").notNull(),
+  notes: text("notes"),
+  metadata: jsonb("metadata").$type<Record<string, any>>(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Lead timeline table
+export const leadTimeline = pgTable("lead_timeline", {
+  id: serial("id").primaryKey(),
+  leadId: integer("lead_id").notNull(),
+  status: leadStatusEnum("status").notNull(),
+  notes: text("notes"),
+  changedById: integer("changed_by_id").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Documents table
+export const documents = pgTable("documents", {
+  id: serial("id").primaryKey(),
+  leadId: integer("lead_id").notNull(),
+  fileName: text("file_name").notNull(),
+  filePath: text("file_path").notNull(),
+  fileSize: integer("file_size").notNull(),
+  mimeType: text("mime_type").notNull(),
+  uploadedById: integer("uploaded_by_id").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});

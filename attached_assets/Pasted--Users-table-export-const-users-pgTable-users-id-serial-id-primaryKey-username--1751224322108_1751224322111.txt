@@ -1,0 +1,115 @@
+// Users table
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  role: userRoleEnum("role").notNull().default("user"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Leads table
+export const leads = pgTable("leads", {
+  id: serial("id").primaryKey(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull(),
+  loanType: loanTypeEnum("loan_type").notNull(),
+  loanAmount: integer("loan_amount").notNull(),
+  status: leadStatusEnum("status").notNull().default("new"),
+  assignedToId: integer("assigned_to_id"),
+  createdById: integer("created_by_id").notNull(),
+  notes: text("notes"),
+  metadata: jsonb("metadata").$type<Record<string, any>>(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Lead timeline table
+export const leadTimeline = pgTable("lead_timeline", {
+  id: serial("id").primaryKey(),
+  leadId: integer("lead_id").notNull(),
+  status: leadStatusEnum("status").notNull(),
+  notes: text("notes"),
+  changedById: integer("changed_by_id").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Documents table
+export const documents = pgTable("documents", {
+  id: serial("id").primaryKey(),
+  leadId: integer("lead_id").notNull(),
+  fileName: text("file_name").notNull(),
+  filePath: text("file_path").notNull(),
+  fileSize: integer("file_size").notNull(),
+  mimeType: text("mime_type").notNull(),
+  uploadedById: integer("uploaded_by_id").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Audit logs table
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  action: auditActionEnum("action").notNull(),
+  resourceType: text("resource_type").notNull(),
+  resourceId: integer("resource_id"),
+  oldValues: text("old_values"),
+  newValues: text("new_values"),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// CRM integrations table
+export const crmIntegrations = pgTable("crm_integrations", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  type: text("type").notNull(),
+  config: jsonb("config").$type<Record<string, any>>().notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  lastSyncAt: timestamp("last_sync_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Projects table
+export const projects = pgTable("projects", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  location: text("location").notNull(),
+  type: text("type").notNull(),
+  builder: text("builder").notNull(),
+  status: projectStatusEnum("status").notNull().default("planning"),
+  totalUnits: integer("total_units").notNull().default(0),
+  soldUnits: integer("sold_units").notNull().default(0),
+  expectedRevenue: integer("expected_revenue").notNull().default(0),
+  completionDate: timestamp("completion_date"),
+  priority: priorityEnum("priority").notNull().default("medium"),
+  createdById: integer("created_by_id").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Telecallers table
+export const telecallers = pgTable("telecallers", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique(),
+  role: text("role").notNull().default("telecaller"),
+  status: telecallerStatusEnum("status").notNull().default("offline"),
+  workingHoursStart: text("working_hours_start").notNull().default("09:00"),
+  workingHoursEnd: text("working_hours_end").notNull().default("18:00"),
+  timezone: text("timezone").notNull().default("IST"),
+  totalCalls: integer("total_calls").notNull().default(0),
+  successfulCalls: integer("successful_calls").notNull().default(0),
+  leadsGenerated: integer("leads_generated").notNull().default(0),
+  conversions: integer("conversions").notNull().default(0),
+  efficiency: integer("efficiency").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});

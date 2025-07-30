@@ -1,0 +1,258 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+
+
+
+
+  :root {
+    --border: 214.3 31.8% 91.4%;
+    /* Light gray */
+    --background: 0 0% 100%;
+    --foreground: 222 84% 9%;
+    /* #0F0F23 - CRED Dark */
+    --muted: 210 40% 98%;
+    --muted-foreground: 215 16% 47%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 84% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 84% 9%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --primary: 159 87% 42%;
+    /* #00D09C - CRED Mint */
+    --primary-foreground: 222 84% 9%;
+    --secondary: 210 40% 98%;
+    --secondary-foreground: 222 84% 9%;
+    --accent: 210 40% 98%;
+    --accent-foreground: 222 84% 9%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --ring: 159 87% 42%;
+    --radius: 0.5rem;
+
+    /* Custom CRED colors */
+    --cred-dark: 222 84% 9%;
+    /* #0F0F23 */
+    --cred-mint: 159 87% 42%;
+    /* #00D09C */
+    --cred-orange: 15 100% 60%;
+    /* #FF6B35 */
+    --cred-amber: 45 100% 50%;
+    /* #FFB800 */
+  }
+
+}
+
+.dark {
+  --background: 222 84% 9%;
+  --foreground: 210 40% 98%;
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 20% 65%;
+  --popover: 222 84% 9%;
+  --popover-foreground: 210 40% 98%;
+  --card: 222 84% 9%;
+  --card-foreground: 210 40% 98%;
+  --border: 217 33% 17%;
+  --input: 217 33% 17%;
+  --primary: 159 87% 42%;
+  --primary-foreground: 222 84% 9%;
+  --secondary: 217 33% 17%;
+  --secondary-foreground: 210 40% 98%;
+  --accent: 217 33% 17%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62% 30%;
+  --destructive-foreground: 210 40% 98%;
+  --ring: 159 87% 42%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold text-foreground;
+  }
+}
+
+@layer components {
+
+  /* Glassmorphism utilities */
+  .glass {
+    @apply backdrop-blur-md bg-white/20 border border-white/20;
+  }
+
+  .glass-strong {
+    @apply backdrop-blur-xl bg-white/30 border border-white/30;
+  }
+
+  .glass-subtle {
+    @apply backdrop-blur-sm bg-white/10 border border-white/10;
+  }
+
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-white/20 rounded-full;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-white/30;
+  }
+
+  .cred-gradient {
+    background: linear-gradient(135deg, hsl(var(--cred-mint)) 0%, hsl(var(--cred-orange)) 100%);
+  }
+
+  .sidebar-active {
+    @apply bg-primary text-primary-foreground font-medium;
+    background: hsl(var(--cred-mint));
+    color: hsl(var(--cred-dark));
+  }
+
+  .metric-card {
+    @apply bg-card rounded-xl shadow-sm border border-border p-6 transition-all hover:shadow-md;
+  }
+
+  .activity-dot {
+    @apply w-2 h-2 rounded-full flex-shrink-0;
+  }
+
+  .status-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium backdrop-blur-sm border;
+  }
+
+  /* Currency formatting */
+  .currency-rupee::before {
+    content: "₹";
+  }
+
+  /* Skeleton loading with glass effect */
+  .skeleton-glass {
+    @apply animate-pulse bg-gradient-to-r from-white/10 via-white/20 to-white/10 backdrop-blur-sm rounded;
+  }
+
+  .status-new {
+    @apply bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300;
+  }
+
+  .status-contacted {
+    @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300;
+  }
+
+  .status-under-review {
+    @apply bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300;
+  }
+
+  .status-approved {
+    @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300;
+  }
+
+  .status-rejected {
+    @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300;
+  }
+
+  .status-disbursed {
+    @apply bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300;
+  }
+}
+
+@layer utilities {
+
+  /* Text gradients */
+  .text-gradient-primary {
+    @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+  }
+
+  .text-gradient-secondary {
+    @apply bg-gradient-to-r from-emerald-500 to-teal-600 bg-clip-text text-transparent;
+  }
+
+  .text-gradient-accent {
+    @apply bg-gradient-to-r from-pink-500 to-rose-600 bg-clip-text text-transparent;
+  }
+
+  /* Animation delays */
+  .animate-delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .animate-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animate-delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .animate-delay-500 {
+    animation-delay: 500ms;
+  }
+
+  .text-cred-dark {
+    color: hsl(var(--cred-dark));
+  }
+
+  .text-cred-mint {
+    color: hsl(var(--cred-mint));
+  }
+
+  .text-cred-orange {
+    color: hsl(var(--cred-orange));
+  }
+
+  .text-cred-amber {
+    color: hsl(var(--cred-amber));
+  }
+
+  .bg-cred-dark {
+    background-color: hsl(var(--cred-dark));
+  }
+
+  .bg-cred-mint {
+    background-color: hsl(var(--cred-mint));
+  }
+
+  .bg-cred-orange {
+    background-color: hsl(var(--cred-orange));
+  }
+
+  .bg-cred-amber {
+    background-color: hsl(var(--cred-amber));
+  }
+
+  .border-cred-mint {
+    border-color: hsl(var(--cred-mint));
+  }
+
+  .ring-cred-mint {
+    --tw-ring-color: hsl(var(--cred-mint));
+  }
+}
