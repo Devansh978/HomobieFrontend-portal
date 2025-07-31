@@ -31,23 +31,19 @@ export function FileUploadPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // In a real app, you would get the user from an auth context
-  // For example: const { user } = useAuth();
-
-  // TODO: Replace this with your actual user retrieval logic (e.g., from context or props)
-  // const userId = localStorage.getItem("user_id"); // or set to a test value like "123" if needed
-  // It's generally better to get the token right before the API call
-  // in case it has expired and been refreshed.
-  const getToken = () => localStorage.getItem("auth_token");
-  // TODO: Replace this with your actual user retrieval logic (e.g., from context or props)
-  // For now, get userId from localStorage or set to "null"
+  // Get user from auth context
   const { user, logout } = useAuth();
-  const userId = user?.userId || "null";
-  const fileId = localStorage.getItem("file_id") || userId; // 
+  
+  // Get token function
+  const getToken = () => localStorage.getItem("auth_token");
+  
+  // Get userId from user object
+  const userId = user?.userId;
 
   // --- API CALL TO GET DOCUMENTS ---
   const fetchDocuments = async () => {
-    if (!fileId) {
+    // Check for userId instead of fileId
+    if (!userId) {
       setError("User not found. Please log in.");
       setIsLoading(false);
       return;
@@ -58,7 +54,7 @@ export function FileUploadPage() {
     const token = getToken();
 
     try {
-      // Prepend the base URL to the endpoint
+      // Use userId in the API call
       const response = await axios.get(`${API_BASE_URL}/document/get/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -75,8 +71,11 @@ export function FileUploadPage() {
 
   // --- FETCH DOCUMENTS ON COMPONENT MOUNT ---
   useEffect(() => {
-    fetchDocuments();
-  }, []); // Empty dependency array means this runs once on mount
+    // Only fetch documents if userId is available
+    if (userId) {
+      fetchDocuments();
+    }
+  }, [userId]); // Add userId as dependency so it refetches when user changes
 
   // --- API CALL TO UPLOAD FILE (POST) ---
   const handleFileUpload = async (file: File, status: "NORMAL" | "MASTER") => {
