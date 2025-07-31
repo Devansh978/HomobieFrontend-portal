@@ -168,8 +168,8 @@ export function EnhancedCreateProjectDialog({
       city: "",
       state: "",
       pincode: "",
-      units: "",
-      budget: "",
+      units: 0,
+      budget: 0,
       description: "",
       completedAt: "",
     },
@@ -285,6 +285,7 @@ export function EnhancedCreateProjectDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/register/user"] });
+      console.log(userId)
       toast({
         title: "Success",
         description: "Lead created successfully!",
