@@ -84,7 +84,7 @@ export function EnhancedRoleBasedNavbar({
         return [
           { path: "/ca", label: "CA Dashboard", icon: Calculator },
           { path: "/leads", label: "Applications", icon: FileText },
-          { path: "/upload", label: "Documents", icon: FileText },
+          { path: "/upload", label: "Upload Data", icon: FileText },
           ...baseItems,
         ];
       case "broker":

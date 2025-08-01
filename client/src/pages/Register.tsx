@@ -8,6 +8,8 @@ import { GlassBackground } from "@/components/layout/GlassBackground";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import HomobieLogo from "/attached_assets/wmremove-transformed_-_Edited-removebg-preview.png";
+
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://homobiebackend-railway-production.up.railway.app';
 
@@ -180,9 +182,11 @@ export default function Register() {
             transition={{ delay: 0.2, duration: 0.6 }}
             className="text-center mb-8"
           >
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-2xl">H</span>
-            </div>
+            <img
+              src={HomobieLogo}
+              alt="Company Logo"
+              className="mx-auto h-24 w-auto mb-4 bg-gradient-to-br from-black-300 to-white-300 "
+            />
             <h1 className="text-3xl font-bold text-gradient-primary mb-2">
               Create Account
             </h1>
@@ -294,7 +298,7 @@ export default function Register() {
                       name="phoneNumber"
                       value={formData.phoneNumber}
                       onChange={handleChange}
-                      placeholder="+91 98765 43210"
+                      placeholder="1234567890"
                       className="pl-10 bg-white/20 border-white/30 backdrop-blur-sm focus:bg-white/30 focus:border-blue-400"
                     />
                   </div>

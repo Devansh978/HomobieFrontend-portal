@@ -32,7 +32,7 @@ export function FileUploadPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Get user from auth context
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   
   // Get token function
   const getToken = () => localStorage.getItem("auth_token");

@@ -10,22 +10,35 @@ import { useToast } from "@/hooks/use-toast";
 import { authService } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+// Corrected the image import to be a default import
+import HomobieLogo from "/attached_assets/wmremove-transformed_-_Edited-removebg-preview.png";
 
 // Define UserRole type if not imported from elsewhere
-type UserRole = "super_admin" | "admin" | "builder" | "telecaller" | "broker" | "ca" | "user";
+type UserRole =
+  | "super_admin"
+  | "admin"
+  | "builder"
+  | "telecaller"
+  | "broker"
+  | "ca"
+  | "user";
 
 export default function GlassLogin() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { login, user } = useAuth();
-  const [formData, setFormData] = useState<{ username: string; password: string; }>({
+  const { login } = useAuth();
+  const [formData, setFormData] = useState<{
+    username: string;
+    password: string;
+  }>({
     username: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isDemoLoading, setIsDemoLoading] = useState(false);
+  // Removed the isDemoLoading state
+  // const [isDemoLoading, setIsDemoLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +57,7 @@ export default function GlassLogin() {
         password: formData.password,
       });
 
-      if ('email' in response) {
+      if ("email" in response) {
         toast({
           title: "Welcome back!",
           description: `Logged in as ${response.email}`,
@@ -70,7 +83,7 @@ export default function GlassLogin() {
       telecaller: "/telecaller",
       broker: "/broker",
       ca: "/ca/portfolio",
-      user: "/dashboard"
+      user: "/dashboard",
     };
 
     // Convert role to lowercase to match keys
@@ -83,13 +96,18 @@ export default function GlassLogin() {
 
     let errorMessage = "Login failed. Please try again.";
 
-    // More specific error handling
     if (err?.response?.data?.message) {
       errorMessage = err.response.data.message;
     } else if (err?.message) {
-      if (err.message.includes("credentials") || err.message.includes("Invalid")) {
+      if (
+        err.message.includes("credentials") ||
+        err.message.includes("Invalid")
+      ) {
         errorMessage = "Invalid username or password";
-      } else if (err.message.includes("network") || err.message.includes("fetch")) {
+      } else if (
+        err.message.includes("network") ||
+        err.message.includes("fetch")
+      ) {
         errorMessage = "Network error. Please check your connection.";
       } else if (err.message.includes("timeout")) {
         errorMessage = "Request timeout. Please try again.";
@@ -99,9 +117,7 @@ export default function GlassLogin() {
     }
 
     setError(errorMessage);
-
-    // Clear password on error
-    setFormData(prev => ({ ...prev, password: "" }));
+    setFormData((prev) => ({ ...prev, password: "" }));
 
     toast({
       title: "Login failed",
@@ -111,60 +127,16 @@ export default function GlassLogin() {
     });
   };
 
-  const handleDemoLogin = async () => {
-    setIsDemoLoading(true);
-    setError(null);
-
-    try {
-      const response = await authService.login({
-        username: "test@email.com",
-        password: "396c2e",
-      });
-
-      // Store token if provided
-      if (response?.token) {
-        localStorage.setItem("authToken", response.token);
-      }
-
-      toast({
-        title: "Demo session started",
-        description: "Logged in as demo user",
-        duration: 5000,
-      });
-
-      RoleBasedRedirect(response.role);
-
-    } catch (err: any) {
-      // Check if user is actually logged in despite the error
-      const currentUser = authService.getUser();
-      if (currentUser) {
-        console.warn("Demo login error thrown but user is authenticated:", err.message);
-
-        toast({
-          title: "Demo session started",
-          description: "Logged in as demo user",
-          duration: 5000,
-        });
-
-        RoleBasedRedirect(currentUser.role);
-        return;
-      }
-
-      handleLoginError(err);
-    } finally {
-      setIsDemoLoading(false);
-    }
-  };
+  // Removed the handleDemoLogin function
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Clear error when user starts typing
     if (error) {
       setError(null);
     }
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
   };
 
@@ -172,7 +144,6 @@ export default function GlassLogin() {
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
       <GlassBackground />
 
-      {/* Floating particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(30)].map((_, i) => (
           <motion.div
@@ -216,13 +187,13 @@ export default function GlassLogin() {
             transition={{ delay: 0.2, duration: 0.6 }}
             className="text-center mb-8"
           >
-            <motion.div
-              className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <span className="text-white font-bold text-2xl">L</span>
-            </motion.div>
+            {/* Correctly rendered the logo with proper src and styling */}
+            <img
+              src={HomobieLogo}
+              alt="Company Logo"
+              className="mx-auto h-24 w-auto mb-4"
+            />
+
             <h1 className="text-3xl font-bold text-gradient-primary mb-2">
               Welcome Back
             </h1>
@@ -263,7 +234,7 @@ export default function GlassLogin() {
                   placeholder="username@example.com"
                   required
                   className="pl-10 bg-white/20 border-white/30 backdrop-blur-sm focus:bg-white/30 focus:border-blue-400 transition-all"
-                  disabled={isLoading || isDemoLoading}
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -289,13 +260,13 @@ export default function GlassLogin() {
                   placeholder="••••••••"
                   required
                   className="pl-10 pr-10 bg-white/20 border-white/30 backdrop-blur-sm focus:bg-white/30 focus:border-blue-400 transition-all"
-                  disabled={isLoading || isDemoLoading}
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  disabled={isLoading || isDemoLoading}
+                  disabled={isLoading}
                 >
                   {showPassword ? (
                     <EyeOff className="h-5 w-5" />
@@ -313,7 +284,7 @@ export default function GlassLogin() {
                   name="remember-me"
                   type="checkbox"
                   className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  disabled={isLoading || isDemoLoading}
+                  disabled={isLoading}
                 />
                 <label
                   htmlFor="remember-me"
@@ -326,11 +297,11 @@ export default function GlassLogin() {
               <GlassButton
                 type="submit"
                 variant="primary"
-                size="lg"
-                disabled={isLoading || isDemoLoading}
+                size="md"
+                disabled={isLoading}
                 className={cn(
                   "w-32 justify-center",
-                  (isLoading || isDemoLoading) && "opacity-80 cursor-not-allowed"
+                  isLoading && "opacity-80 cursor-not-allowed"
                 )}
               >
                 {isLoading ? (
@@ -348,30 +319,7 @@ export default function GlassLogin() {
             </div>
           </motion.form>
 
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300/30" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white/10 text-gray-500">or</span>
-            </div>
-          </div>
-
-          <GlassButton
-            onClick={handleDemoLogin}
-            variant="secondary"
-            className="w-full"
-            disabled={isLoading || isDemoLoading}
-          >
-            {isDemoLoading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                Loading Demo...
-              </>
-            ) : (
-              "Try Demo Account"
-            )}
-          </GlassButton>
+          {/* Removed the 'or' divider and the demo button */}
 
           <motion.div
             initial={{ opacity: 0 }}
@@ -396,7 +344,9 @@ export default function GlassLogin() {
           transition={{ delay: 1, duration: 0.6 }}
           className="mt-6 text-center text-xs text-gray-500"
         >
-          <p>By continuing, you agree to our Terms of Service and Privacy Policy</p>
+          <p>
+            By continuing, you agree to our Terms of Service and Privacy Policy
+          </p>
         </motion.div>
       </motion.div>
     </div>

@@ -19,14 +19,14 @@ import { cn } from "@/lib/utils";
 
 // STEP 1: Define all possible nav items with their required roles
 const allNavItems = [
-  { path: "/dashboard", label: "Dashboard", icon: Home, roles: ['admin', 'telecaller', 'builder', 'ca', 'broker', 'user'] },
-  { path: "/leads", label: "Leads", icon: FileText, roles: ['admin', 'telecaller', 'builder',] },
-  { path: "/upload", label: "Documents", icon: FileText, roles: ['admin', 'builder', 'telecaller', 'user'] },
-  { path: "/builder", label: "Builder", icon: Building, roles: ['builder'] },
-  { path: "/telecaller", label: "Telecaller", icon: Phone, roles: ['telecaller'] },
-  { path: "/users", label: "Users", icon: Users, roles: ['admin'] },
-  { path: "/analytics", label: "Analytics", icon: BarChart3, roles: ['admin', 'telecaller', 'builder'] },
-  { path: "/settings", label: "Settings", icon: Settings, roles: ['admin', 'telecaller', 'builder','user', 'ca', 'broker'] },
+  // { path: "/dashboard", label: "Dashboard", icon: Home, roles: ['admin', 'telecaller', 'builder', 'ca', 'broker', 'user'] },
+  // { path: "/leads", label: "Leads", icon: FileText, roles: ['admin', 'telecaller', 'builder',] },
+  // { path: "/upload", label: "Documents", icon: FileText, roles: ['admin', 'builder', 'telecaller', 'user'] },
+  // { path: "/builder", label: "Builder", icon: Building, roles: ['builder'] },
+  // { path: "/telecaller", label: "Telecaller", icon: Phone, roles: ['telecaller'] },
+  // { path: "/users", label: "Users", icon: Users, roles: ['admin'] },
+  // { path: "/analytics", label: "Analytics", icon: BarChart3, roles: ['admin', 'telecaller', 'builder'] },
+  // { path: "/settings", label: "Settings", icon: Settings, roles: ['admin', 'telecaller', 'builder','user', 'ca', 'broker'] },
 ];
 
 // STEP 2: Mock an authentication hook. In a real app, this comes from your auth provider.
@@ -63,7 +63,7 @@ export function GlassNavbar() {
               className="flex items-center space-x-3"
             >
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">L</span>
+                <span className="text-white font-bold text-sm">H</span>
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Homobie
