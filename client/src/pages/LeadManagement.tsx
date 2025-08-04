@@ -269,17 +269,17 @@ export default function LeadManagement() {
           <GlassCard blur="md" className="p-4">
             <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
               <div className="relative flex-1 w-full md:max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-100 h-4 w-4" />
                 <Input
                   placeholder="Search by name or phone..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-white/10 border-white/20 text-white"
+                  className="pl-10 bg-white/10 border-white/20 text-white-900 placeholder:text-gray-100"
                 />
               </div>
               <Button
                 onClick={() => setIsCreateDialogOpen(true)}
-                className="w-full md:w-auto bg-emerald-500/80 hover:bg-emerald-500/90"
+                className="w-full md:w-auto bg-emerald-400/80 hover:bg-emerald-400/90"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Lead
@@ -332,10 +332,10 @@ export default function LeadManagement() {
                         <TableCell className="font-medium text-white">
                           {lead.firstName} {lead.lastName}
                         </TableCell>
-                        <TableCell className="text-gray-300">
+                        <TableCell className="text-white text-sm">
                           {lead.phoneNumber}
                         </TableCell>
-                        <TableCell className="text-gray-300 text-sm">
+                        <TableCell className="text-white text-sm">
                           {formatAddress(lead.location)}
                         </TableCell>
                         <TableCell>
