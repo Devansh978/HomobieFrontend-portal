@@ -1,4 +1,5 @@
-import { useState } from "react";
+// MODIFIED: Imported useEffect
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useLocation } from "wouter";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle } from "lucide-react";
@@ -10,10 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { authService } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-// Corrected the image import to be a default import
 import HomobieLogo from "/attached_assets/wmremove-transformed_-_Edited-removebg-preview.png";
 
-// Define UserRole type if not imported from elsewhere
 type UserRole =
   | "super_admin"
   | "admin"
@@ -37,8 +36,18 @@ export default function GlassLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Removed the isDemoLoading state
-  // const [isDemoLoading, setIsDemoLoading] = useState(false);
+  // ADDED: State for the "Remember me" checkbox
+  const [rememberMe, setRememberMe] = useState(false);
+
+
+  // ADDED: useEffect to check for a remembered username on component load
+  useEffect(() => {
+    const rememberedUsername = localStorage.getItem('rememberedUsername');
+    if (rememberedUsername) {
+      setFormData((prev) => ({ ...prev, username: rememberedUsername }));
+      setRememberMe(true);
+    }
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,13 +67,19 @@ export default function GlassLogin() {
       });
 
       if ("email" in response) {
+        // ADDED: Logic to save or remove username based on the "Remember me" checkbox
+        if (rememberMe) {
+          localStorage.setItem('rememberedUsername', formData.username);
+        } else {
+          localStorage.removeItem('rememberedUsername');
+        }
+
         toast({
           title: "Welcome back!",
           description: `Logged in as ${response.email}`,
           duration: 5000,
         });
 
-        // Convert role to lowercase for consistency with UserRole type
         const role = response.role.toLowerCase() as UserRole;
         RoleBasedRedirect(role);
       }
@@ -86,7 +101,6 @@ export default function GlassLogin() {
       user: "/dashboard",
     };
 
-    // Convert role to lowercase to match keys
     const normalizedRole = role.toLowerCase();
     setLocation(roleRoutes[normalizedRole] || "/dashboard");
   };
@@ -127,8 +141,6 @@ export default function GlassLogin() {
     });
   };
 
-  // Removed the handleDemoLogin function
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (error) {
       setError(null);
@@ -144,6 +156,7 @@ export default function GlassLogin() {
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
       <GlassBackground />
 
+      {/* Background animation elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(30)].map((_, i) => (
           <motion.div
@@ -178,22 +191,22 @@ export default function GlassLogin() {
           blur="xl"
           className="p-8 relative overflow-hidden"
         >
+          {/* Decorative elements */}
           <div className="absolute -right-20 -top-20 w-40 h-40 rounded-full bg-blue-500/20 blur-3xl" />
           <div className="absolute -left-20 -bottom-20 w-40 h-40 rounded-full bg-purple-500/20 blur-3xl" />
 
+          {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.6 }}
             className="text-center mb-8"
           >
-            {/* Correctly rendered the logo with proper src and styling */}
             <img
               src={HomobieLogo}
               alt="Company Logo"
               className="mx-auto h-24 w-auto mb-4"
             />
-
             <h1 className="text-3xl font-bold text-gradient-primary mb-2">
               Welcome Back
             </h1>
@@ -202,6 +215,7 @@ export default function GlassLogin() {
             </p>
           </motion.div>
 
+          {/* Error Message */}
           {error && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -213,6 +227,7 @@ export default function GlassLogin() {
             </motion.div>
           )}
 
+          {/* Form */}
           <motion.form
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -220,6 +235,7 @@ export default function GlassLogin() {
             onSubmit={handleSubmit}
             className="space-y-6"
           >
+            {/* Username Field */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Username or Email
@@ -239,6 +255,7 @@ export default function GlassLogin() {
               </div>
             </div>
 
+            {/* Password Field */}
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -277,12 +294,16 @@ export default function GlassLogin() {
               </div>
             </div>
 
+            {/* Remember Me and Sign In Button */}
             <div className="flex items-center justify-between">
               <div className="flex items-center">
+                {/* MODIFIED: Connected checkbox to state */}
                 <input
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   disabled={isLoading}
                 />
@@ -319,8 +340,7 @@ export default function GlassLogin() {
             </div>
           </motion.form>
 
-          {/* Removed the 'or' divider and the demo button */}
-
+          {/* Sign Up Link */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -338,6 +358,7 @@ export default function GlassLogin() {
           </motion.div>
         </GlassCard>
 
+        {/* Footer Text */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

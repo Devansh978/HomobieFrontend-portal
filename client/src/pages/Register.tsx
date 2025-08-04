@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useLocation } from "wouter";
-import { Mail, User, Phone, Building, ArrowRight, Check, MapPin } from "lucide-react";
+// MODIFICATION: Added FileBadge icon for RERA ID
+import { Mail, User, Phone, Building, ArrowRight, Check, MapPin, FileBadge } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { GlassButton } from "@/components/ui/glass-button";
 import { GlassBackground } from "@/components/layout/GlassBackground";
@@ -13,6 +14,7 @@ import HomobieLogo from "/attached_assets/wmremove-transformed_-_Edited-removebg
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://homobiebackend-railway-production.up.railway.app';
 
+// MODIFICATION: Added reraId to the FormData type
 type FormData = {
   firstName: string;
   lastName: string;
@@ -20,6 +22,7 @@ type FormData = {
   phoneNumber: string;
   roleType: "USER" | "BUILDER" | "BROKER" | "CA" | "ADMIN";
   companyName: string;
+  reraId: string; // Added this field
   country: string;
   state: string;
   city: string;
@@ -30,6 +33,7 @@ type FormData = {
 export default function Register() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  // MODIFICATION: Initialized reraId in the component's state
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -37,6 +41,7 @@ export default function Register() {
     phoneNumber: "",
     roleType: "USER",
     companyName: "",
+    reraId: "", // Added this field
     country: "",
     state: "",
     city: "",
@@ -57,7 +62,10 @@ export default function Register() {
   const handleRoleChange = (value: FormData['roleType']) => {
     setFormData(prev => ({
       ...prev,
-      roleType: value
+      roleType: value,
+      // Reset builder-specific fields if role changes from builder
+      companyName: value === 'BUILDER' ? prev.companyName : '',
+      reraId: value === 'BUILDER' ? prev.reraId : '',
     }));
   };
 
@@ -72,6 +80,7 @@ export default function Register() {
     setIsLoading(true);
 
     try {
+      // MODIFICATION: Added reraId to the submission payload for Builders
       const registrationData = {
         user: {
           firstName: formData.firstName,
@@ -83,6 +92,7 @@ export default function Register() {
           roleType: formData.roleType,
           ...(formData.roleType === "BUILDER" ? {
             companyName: formData.companyName,
+            reraId: formData.reraId, // Added this field
             location: {
               country: formData.country,
               state: formData.state,
@@ -232,9 +242,11 @@ export default function Register() {
           >
             {currentStep === 1 && (
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
+                key="step1"
+                initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.5 }}
                 className="space-y-4"
               >
                 <div className="grid grid-cols-2 gap-4">
@@ -251,6 +263,7 @@ export default function Register() {
                         onChange={handleChange}
                         placeholder="John"
                         className="pl-10 bg-white/20 border-white/30 backdrop-blur-sm focus:bg-white/30 focus:border-blue-400"
+                        required
                       />
                     </div>
                   </div>
@@ -266,6 +279,7 @@ export default function Register() {
                       onChange={handleChange}
                       placeholder="Doe"
                       className="bg-white/20 border-white/30 backdrop-blur-sm focus:bg-white/30 focus:border-blue-400"
+                      required
                     />
                   </div>
                 </div>
@@ -283,6 +297,7 @@ export default function Register() {
                       onChange={handleChange}
                       placeholder="john.doe@example.com"
                       className="pl-10 bg-white/20 border-white/30 backdrop-blur-sm focus:bg-white/30 focus:border-blue-400"
+                      required
                     />
                   </div>
                 </div>
@@ -300,6 +315,7 @@ export default function Register() {
                       onChange={handleChange}
                       placeholder="1234567890"
                       className="pl-10 bg-white/20 border-white/30 backdrop-blur-sm focus:bg-white/30 focus:border-blue-400"
+                      required
                     />
                   </div>
                 </div>
@@ -324,35 +340,66 @@ export default function Register() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* MODIFICATION: Conditionally render Company Name and RERA ID fields */}
+                {formData.roleType === 'BUILDER' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="space-y-4 overflow-hidden"
+                  >
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Company Name
+                      </label>
+                      <div className="relative">
+                        <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <Input
+                          type="text"
+                          name="companyName"
+                          value={formData.companyName}
+                          onChange={handleChange}
+                          placeholder="Your Company Name"
+                          className="pl-10 bg-white/20 border-white/30 backdrop-blur-sm focus:bg-white/30 focus:border-blue-400"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        RERA ID
+                      </label>
+                      <div className="relative">
+                        <FileBadge className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <Input
+                          type="text"
+                          name="reraId"
+                          value={formData.reraId}
+                          onChange={handleChange}
+                          placeholder="Enter your RERA ID"
+                          className="pl-10 bg-white/20 border-white/30 backdrop-blur-sm focus:bg-white/30 focus:border-blue-400"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
               </motion.div>
             )}
 
             {currentStep === 2 && (
               <motion.div
+                key="step2"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.5 }}
                 className="space-y-4"
               >
-                {formData.roleType === "BUILDER" && (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Company Name
-                    </label>
-                    <div className="relative">
-                      <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                      <Input
-                        type="text"
-                        name="companyName"
-                        value={formData.companyName}
-                        onChange={handleChange}
-                        placeholder="Your Company Name"
-                        className="pl-10 bg-white/20 border-white/30 backdrop-blur-sm focus:bg-white/30 focus:border-blue-400"
-                      />
-                    </div>
-                  </div>
-                )}
-
+                {/* MODIFICATION: Removed the old Company Name field from this step */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
