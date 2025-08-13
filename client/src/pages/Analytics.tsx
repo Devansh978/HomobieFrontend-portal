@@ -20,8 +20,6 @@ import {
   BarChart3,
   Download,
   Calendar as CalendarIcon,
-  TrendingUp,
-  TrendingDown,
   Users,
   DollarSign,
   FileText,
@@ -30,15 +28,33 @@ import {
 import { authenticatedFetch } from "@/lib/auth";
 import { format } from "date-fns";
 
-interface AnalyticsData {
-  totalLeads: number;
-  conversionRate: number;
-  totalLoanValue: number;
-  averageLoanAmount: number;
-  leadsByStatus: Record<string, number>;
-  leadsByMonth: Array<{ month: string; count: number; value: number }>;
-  topPerformers: Array<{ name: string; leads: number; conversions: number }>;
+interface TotalAndAverageData {
+  total: number;
+  average: number;
 }
+
+interface LeadsCountByStatus {
+  [status: string]: number;
+}
+
+interface ActiveUsersData {
+  count: number;
+}
+
+interface MonthlyUsersData {
+  month: string;
+  count: number;
+}
+
+const BASE_URL = "https://homobiebackend-railway-production.up.railway.app";
+
+// Updated based on backend enum values from error messages
+const STATUS_OPTIONS = ["PENDING", "CONTACTED", "QUALIFIED", "CONVERTED", "REJECTED", "NO_LOANS"];
+const ROLE_OPTIONS = ["ADMIN", "BUILDER", "BROKER", "USER"]; // Updated to uppercase based on error
+
+const getToken = () => {
+  return localStorage.getItem("auth_token") || localStorage.getItem("token") || "";
+};
 
 export default function Analytics() {
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({
@@ -46,46 +62,101 @@ export default function Analytics() {
     to: new Date(),
   });
   const [reportType, setReportType] = useState("overview");
+  const [selectedStatus, setSelectedStatus] = useState<string>("PENDING"); // Changed to uppercase
+  const [selectedRole, setSelectedRole] = useState<string>("BUILDER"); // Changed to uppercase
 
-  const { data: analyticsData, isLoading } = useQuery<AnalyticsData>({
-    queryKey: ["/api/analytics", dateRange],
+  // Fetch total and average data - requires status parameter
+  const { data: totalAndAverageData } = useQuery<TotalAndAverageData>({
+    queryKey: ["totalAndAverage", selectedStatus, dateRange],
     queryFn: async () => {
       const params = new URLSearchParams();
+      params.append("status", selectedStatus);
       if (dateRange.from) params.append("from", dateRange.from.toISOString());
       if (dateRange.to) params.append("to", dateRange.to.toISOString());
 
       const response = await authenticatedFetch(
-        `/api/analytics?${params.toString()}`,
+        `${BASE_URL}/analytics/getTotalAndAverage?${params.toString()}`
       );
       if (!response.ok) {
-        // Return mock data for demo
-        return {
-          totalLeads: 324,
-          conversionRate: 23.5,
-          totalLoanValue: 45000000,
-          averageLoanAmount: 3200000,
-          leadsByStatus: {
-            new: 45,
-            contacted: 67,
-            under_review: 89,
-            approved: 76,
-            rejected: 32,
-            disbursed: 15,
-          },
-          leadsByMonth: [
-            { month: "Jan", count: 45, value: 15000000 },
-            { month: "Feb", count: 52, value: 18000000 },
-            { month: "Mar", count: 38, value: 12000000 },
-            { month: "Apr", count: 61, value: 22000000 },
-            { month: "May", count: 55, value: 19000000 },
-            { month: "Jun", count: 73, value: 25000000 },
-          ],
-          topPerformers: [
-            { name: "CA Manager", leads: 45, conversions: 12 },
-            { name: "Loan Broker", leads: 38, conversions: 9 },
-            { name: "Builder Partner", leads: 32, conversions: 8 },
-          ],
-        };
+        const error = await response.json();
+        throw new Error(error.message || "Failed to fetch total and average data");
+      }
+      return response.json();
+    },
+  });
+
+  // Fetch leads count by status - requires status parameter
+  const { data: leadsCountByStatus } = useQuery<LeadsCountByStatus>({
+  queryKey: ["leadsCountByStatus", dateRange], // Removed selectedStatus from queryKey since we're hardcoding it
+  queryFn: async () => {
+    const params = new URLSearchParams();
+    params.append("status", "NEW"); // Hardcoded to always request NEW status
+    if (dateRange.from) params.append("from", dateRange.from.toISOString());
+    if (dateRange.to) params.append("to", dateRange.to.toISOString());
+
+    const response = await authenticatedFetch(
+      `${BASE_URL}/analytics/getLeadsCountByStatus?${params.toString()}`
+    );
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to fetch leads count by status");
+    }
+    return response.json();
+  },
+});
+
+  // Fetch total active users - works correctly
+  const { data: totalActiveUsers } = useQuery<ActiveUsersData>({
+    queryKey: ["totalActiveUsers"],
+    queryFn: async () => {
+      const response = await authenticatedFetch(
+        `${BASE_URL}/analytics/count-total-active-users`
+      );
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to fetch total active users");
+      }
+      return response.json();
+    },
+  });
+
+  // Fetch monthly users by role - works correctly
+  // In your monthly users by role query, ensure the response is always treated as an array
+const { data: monthlyUsersByRole } = useQuery<MonthlyUsersData[]>({
+  queryKey: ["monthlyUsersByRole", selectedRole, dateRange],
+  queryFn: async () => {
+    const params = new URLSearchParams();
+    params.append("role", selectedRole);
+    if (dateRange.from) params.append("from", dateRange.from.toISOString());
+    if (dateRange.to) params.append("to", dateRange.to.toISOString());
+
+    const response = await authenticatedFetch(
+      `${BASE_URL}/analytics/count-monthly-users-by-role?${params.toString()}`
+    );
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to fetch monthly users by role");
+    }
+    const data = await response.json();
+    // Ensure we always return an array, even if the API returns something else
+    return Array.isArray(data) ? data : [];
+  },
+});
+
+
+  // Fetch active users by role - requires role parameter in uppercase
+  const { data: activeUsersByRole } = useQuery<ActiveUsersData>({
+    queryKey: ["activeUsersByRole", selectedRole],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append("role", selectedRole);
+
+      const response = await authenticatedFetch(
+        `${BASE_URL}/analytics/count-active-users-by-role?${params.toString()}`
+      );
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to fetch active users by role");
       }
       return response.json();
     },
@@ -99,18 +170,19 @@ export default function Analytics() {
 
   const exportReport = async () => {
     try {
-      // Mock export functionality
-      const blob = new Blob(["Lead Report Data"], { type: "text/csv" });
+      const blob = new Blob(["Analytics Report Data"], { type: "text/csv" });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `lead-report-${format(new Date(), "yyyy-MM-dd")}.csv`;
+      a.download = `analytics-report-${format(new Date(), "yyyy-MM-dd")}.csv`;
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Export failed:", error);
     }
   };
+
+  const isLoading = !totalAndAverageData || !leadsCountByStatus || !totalActiveUsers;
 
   if (isLoading) {
     return (
@@ -144,7 +216,7 @@ export default function Analytics() {
             <SelectContent>
               <SelectItem value="overview">Overview Report</SelectItem>
               <SelectItem value="leads">Lead Analysis</SelectItem>
-              <SelectItem value="performance">Performance Report</SelectItem>
+              <SelectItem value="users">User Analytics</SelectItem>
               <SelectItem value="financial">Financial Report</SelectItem>
             </SelectContent>
           </Select>
@@ -174,6 +246,44 @@ export default function Analytics() {
         </div>
       </div>
 
+      {/* Status Selector */}
+      <div className="flex items-center space-x-4">
+        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Select status" />
+          </SelectTrigger>
+          <SelectContent>
+            {STATUS_OPTIONS.map((status) => (
+              <SelectItem key={status} value={status}>
+                {status}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="text-lg font-semibold">
+          {leadsCountByStatus?.[selectedStatus] || 0} leads with status "{selectedStatus}"
+        </div>
+      </div>
+
+      {/* Role Selector */}
+      <div className="flex items-center space-x-4">
+        <Select value={selectedRole} onValueChange={setSelectedRole}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Select role" />
+          </SelectTrigger>
+          <SelectContent>
+            {ROLE_OPTIONS.map((role) => (
+              <SelectItem key={role} value={role}>
+                {role}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="text-lg font-semibold">
+          {activeUsersByRole?.count || 0} active {selectedRole} users
+        </div>
+      </div>
+
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
@@ -183,66 +293,50 @@ export default function Analytics() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {analyticsData?.totalLeads}
+              {totalAndAverageData?.total || 0}
             </div>
-            <p className="text-xs text-green-600 flex items-center">
-              <TrendingUp className="mr-1 h-3 w-3" />
-              +12.5% from last month
-            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Conversion Rate
-            </CardTitle>
-            <Target className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {analyticsData?.conversionRate}%
-            </div>
-            <p className="text-xs text-green-600 flex items-center">
-              <TrendingUp className="mr-1 h-3 w-3" />
-              +2.1% from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Loan Value
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(analyticsData?.totalLoanValue || 0)}
-            </div>
-            <p className="text-xs text-green-600 flex items-center">
-              <TrendingUp className="mr-1 h-3 w-3" />
-              +18.2% from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Avg Loan Amount
+              Average Value
             </CardTitle>
             <FileText className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(analyticsData?.averageLoanAmount || 0)}
+              {formatCurrency(totalAndAverageData?.average || 0)}
             </div>
-            <p className="text-xs text-red-600 flex items-center">
-              <TrendingDown className="mr-1 h-3 w-3" />
-              -3.2% from last month
-            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Active Users
+            </CardTitle>
+            <Users className="h-4 w-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {totalActiveUsers?.count || 0}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Active {selectedRole} Users
+            </CardTitle>
+            <Target className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {activeUsersByRole?.count || 0}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -255,84 +349,45 @@ export default function Analytics() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {Object.entries(analyticsData?.leadsByStatus || {}).map(
+              {leadsCountByStatus && Object.entries(leadsCountByStatus).map(
                 ([status, count]) => (
-                  <div
-                    key={status}
-                    className="flex items-center justify-between"
-                  >
+                  <div key={status} className="flex items-center justify-between">
                     <Badge variant="outline" className="capitalize">
-                      {status.replace("_", " ")}
+                      {status}
                     </Badge>
                     <span className="font-semibold">{count}</span>
                   </div>
-                ),
+                )
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Monthly Trends */}
+        {/* Monthly Users by Role */}
         <Card>
-          <CardHeader>
-            <CardTitle>Monthly Trends</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {analyticsData?.leadsByMonth?.map((month) => (
-                <div
-                  key={month.month}
-                  className="flex items-center justify-between"
-                >
-                  <span className="text-sm font-medium">{month.month}</span>
-                  <div className="text-right">
-                    <div className="text-sm font-semibold">
-                      {month.count} leads
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {formatCurrency(month.value)}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Top Performers */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Top Performers</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {analyticsData?.topPerformers?.map((performer, index) => (
-              <div
-                key={performer.name}
-                className="flex items-center justify-between p-4 border rounded"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-semibold text-blue-600">
-                      {index + 1}
-                    </span>
-                  </div>
-                  <span className="font-medium">{performer.name}</span>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-semibold">
-                    {performer.leads} leads
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {performer.conversions} conversions
-                  </div>
-                </div>
+  <CardHeader>
+    <CardTitle>Monthly Users ({selectedRole})</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <div className="space-y-3">
+      {Array.isArray(monthlyUsersByRole) && monthlyUsersByRole.length > 0 ? (
+        monthlyUsersByRole.map((month) => (
+          <div key={month.month} className="flex items-center justify-between">
+            <span className="text-sm font-medium">{month.month}</span>
+            <div className="text-right">
+              <div className="text-sm font-semibold">
+                {month.count} users
               </div>
-            ))}
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        ))
+      ) : (
+        <div className="text-sm text-gray-500">No monthly user data available</div>
+      )}
+    </div>
+  </CardContent>
+</Card>
+      </div>
     </div>
   );
 }

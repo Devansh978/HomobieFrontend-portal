@@ -31,7 +31,7 @@ export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [showNewApplicationModal, setShowNewApplicationModal] = useState(false);
 
-  // const navigate = useNavigate(); // inside component
+  const navigate = useNavigate(); // inside component
 
   const [form, setForm] = useState({
     loanType: '',
@@ -296,13 +296,15 @@ export default function UserDashboard() {
                 New Application
               </Button> */}
               <Button
-                onClick={() => navigate("/new-application")}
+                onClick={() => open("https://homobie.vercel.app/loan-application?type=home-loan")}
                 className="h-16 bg-gradient-to-r from-indigo-500/20 to-blue-500/20 border border-indigo-500/30 hover:from-indigo-500/30 hover:to-blue-500/30"
               >
                 <FileText className="h-6 w-6 mr-2" />
                 New Application
               </Button>
-              <Button className="h-16 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 hover:from-emerald-500/30 hover:to-teal-500/30">
+              <Button 
+              onClick={() => navigate("/upload")}
+              className="h-16 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 hover:from-emerald-500/30 hover:to-teal-500/30">
                 <Phone className="h-6 w-6 mr-2" />
                 Upload Documents
               </Button>
