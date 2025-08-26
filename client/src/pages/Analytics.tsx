@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Popover,
   PopoverContent,
@@ -27,6 +28,7 @@ import {
 } from "lucide-react";
 import { authenticatedFetch } from "@/lib/auth";
 import { format } from "date-fns";
+import { EnhancedRoleBasedNavbar } from "@/components/layout/EnhancedRoleBasedNavbar";
 
 interface TotalAndAverageData {
   total: number;
@@ -57,6 +59,8 @@ const getToken = () => {
 };
 
 export default function Analytics() {
+  const { user, logout } = useAuth();
+
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({
     from: new Date(new Date().getFullYear(), new Date().getMonth() - 1),
     to: new Date(),
@@ -201,6 +205,7 @@ const { data: monthlyUsersByRole } = useQuery<MonthlyUsersData[]>({
 
   return (
     <div className="p-6 space-y-6">
+      <EnhancedRoleBasedNavbar user={user} onLogout={logout} />
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <BarChart3 className="h-6 w-6 text-gray-600" />

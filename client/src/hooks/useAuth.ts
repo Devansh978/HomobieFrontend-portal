@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { authService, type AuthUser } from "@/lib/auth";
+import { useLocation } from "wouter";
 
 export function useAuth() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const initializationRef = useRef(false);
+  const [, setLocation] = useLocation();
 
   // Initialize auth state on mount
   useEffect(() => {
@@ -83,21 +85,19 @@ export function useAuth() {
     }
   }, []);
 
-  const logout = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      await authService.logout();
-      setUser(null);
-      setError(null);
-    } catch (err) {
-      console.warn('Logout error:', err);
-      // Clear state anyway
-      setUser(null);
-      setError(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+ const logout = useCallback(async () => {
+  setIsLoading(true);
+  try {
+    await authService.logout();
+  } catch (err) {
+    console.warn("Logout error:", err);
+  } finally {
+    setUser(null);
+    setError(null);
+    setIsLoading(false);
+    setLocation("/login");
+  }
+}, [setLocation]);
 
   const hasRole = useCallback((roles: string[]) => {
     return user ? roles.includes(user.role) : false;
