@@ -60,7 +60,7 @@ export function EnhancedRoleBasedNavbar({
 
   const getRoleNavigation = () => {
     const baseItems = [
-      { path: "/analytics", label: "Analytics", icon: BarChart3 },
+      // { path: "/analytics", label: "Analytics", icon: BarChart3 },
       { path: "/settings", label: "Settings", icon: Settings },
     ];
 
@@ -69,7 +69,7 @@ export function EnhancedRoleBasedNavbar({
         return [
           { path: "/builder", label: "Builder Portal", icon: Building2 },
           { path: "/leads", label: "Lead Management", icon: Target },
-
+{ path: "/analytics", label: "Analytics", icon: BarChart3 },
           { path: "/upload", label: "Upload Data", icon: Upload },
           ...baseItems,
         ];
@@ -77,6 +77,7 @@ export function EnhancedRoleBasedNavbar({
         return [
           { path: "/telecaller", label: "Telecaller Portal", icon: Phone },
           { path: "/leads", label: "My Leads", icon: Target },
+          { path: "/analytics", label: "Analytics", icon: BarChart3 },
           { path: "/upload", label: "Upload Data", icon: Upload },
           ...baseItems,
         ];
@@ -84,6 +85,7 @@ export function EnhancedRoleBasedNavbar({
         return [
           { path: "/ca", label: "CA Dashboard", icon: Calculator },
           { path: "/leads", label: "Applications", icon: FileText },
+          { path: "/analytics", label: "Analytics", icon: BarChart3 },
           { path: "/upload", label: "Upload Data", icon: FileText },
           ...baseItems,
         ];
@@ -91,6 +93,7 @@ export function EnhancedRoleBasedNavbar({
         return [
           { path: "/broker", label: "Broker Portal", icon: Briefcase },
           { path: "/leads", label: "Client Management", icon: Users },
+          { path: "/analytics", label: "Analytics", icon: BarChart3 },
           { path: "/upload", label: "Upload Data", icon: Upload },
           ...baseItems,
         ];
@@ -98,9 +101,10 @@ export function EnhancedRoleBasedNavbar({
       case "super_admin":
         return [
           { path: "/admin", label: "Admin Portal", icon: Shield },
-          { path: "/builder", label: "Builder Portal", icon: Building2 }, // Admins can access builder features
+          { path: "/builder", label: "Builder Portal", icon: Building2 },
           { path: "/users", label: "User Management", icon: Users },
           { path: "/leads", label: "All Leads", icon: Target },
+          { path: "/analytics", label: "Analytics", icon: BarChart3 },
           { path: "/audit", label: "Audit Logs", icon: FileText },
           { path: "/upload", label: "Upload Data", icon: Upload },
           ...baseItems,
@@ -108,7 +112,7 @@ export function EnhancedRoleBasedNavbar({
       case "user":
         return [
           { path: "/dashboard", label: "Dashboard", icon: Home },
-          { path: "/leads", label: "My Leads", icon: Target },
+          // { path: "/leads", label: "My Leads", icon: Target },
           { path: "/upload", label: "Upload Data", icon: Upload },
           ...baseItems,
         ];
@@ -139,7 +143,7 @@ export function EnhancedRoleBasedNavbar({
       case "telecaller":
         return "bg-cyan-500/20 text-cyan-100 border-cyan-500/30";
       default:
-        return "bg-gray-500/20 text-gray-100 border-gray-500/30";
+        return "bg-gray-500/20 text-black border-gray-500/30";
     }
   };
 
@@ -166,10 +170,16 @@ export function EnhancedRoleBasedNavbar({
                 <Building2 className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-black to-emerald-100 bg-clip-text text-transparent">
-                  Homobie
-                </h1>
-                <p className="text-xs text-black-400">Loan Management System</p>
+                <Link href="/dashboard">
+                  <a className="block">
+                    <h1 className="text-xl font-bold bg-gradient-to-r from-black to-emerald-100 bg-clip-text text-transparent">
+                      Homobie
+                    </h1>
+                    <p className="text-xs text-gray-400">
+                      Loan Management System
+                    </p>
+                  </a>
+                </Link>
               </div>
             </motion.div>
 
@@ -315,7 +325,7 @@ export function EnhancedRoleBasedNavbar({
                     variant="ghost"
                     size="sm"
                     onClick={() => setIsOpen(!isOpen)}
-                    className="p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg"
+                    className="p-2 text-gray-200 hover:text-white hover:bg-gray-800 rounded-lg"
                   >
                     {isOpen ? (
                       <X className="h-5 w-5" />

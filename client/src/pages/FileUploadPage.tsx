@@ -7,10 +7,11 @@ import {
   AlertCircle,
 } from "lucide-react";
 import axios from "axios";
-import { FileUploader } from "@/components/ui/file-uploader"; // Your existing component
+import { FileUploader } from "@/components/ui/file-uploader";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { authService } from "@/lib/auth";
+import { EnhancedRoleBasedNavbar } from "@/components/layout/EnhancedRoleBasedNavbar";
 
 // --- Define your API Base URL ---
 const API_BASE_URL = "https://homobiebackend-railway-production.up.railway.app";
@@ -27,12 +28,11 @@ interface Document {
 
 export function FileUploadPage() {
   // --- STATE MANAGEMENT ---
+  const { user, logout } = useAuth();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Get user from auth context
-  const { user } = useAuth();
   
   // Get token function
   const getToken = () => localStorage.getItem("auth_token");
@@ -63,6 +63,7 @@ export function FileUploadPage() {
       setDocuments(response.data);
     } catch (err) {
       console.error("Error fetching documents:", err);
+      
       setError("Failed to fetch documents.");
     } finally {
       setIsLoading(false);
@@ -88,6 +89,7 @@ export function FileUploadPage() {
     formData.append("userId", userId);
     formData.append("status", status);
     const token = getToken();
+    
 
     try {
       // Prepend the base URL to the endpoint
@@ -99,9 +101,10 @@ export function FileUploadPage() {
           headers: {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
-          },
+          }, 
         }
       );
+      
       alert("File uploaded successfully! " + response.data);
       // Refresh the document list after a successful upload
       fetchDocuments();
@@ -116,10 +119,10 @@ export function FileUploadPage() {
       throw error;
     }
   };
-
   // --- RENDER ---
   return (
-    <div className="min-h-screen bg-black text-white p-4 sm:p-6 lg:p-8 pt-28">
+    <div className="min-h-screen bg-black p-4 sm:p-6 lg:p-8 pt-28">
+      <EnhancedRoleBasedNavbar user={user} onLogout={logout} />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -155,8 +158,8 @@ export function FileUploadPage() {
         </div>
 
         {/* Display Fetched Documents */}
-        <div className="mt-16">
-          <h2 className="text-2xl font-bold flex items-center mb-4">
+        <div className="mt-16  text-white">
+          <h2 className="text-2xl font-bold flex items-center mb-4 text-white">
             <List className="mr-3" /> Your Uploaded Documents
           </h2>
           {isLoading && (

@@ -224,40 +224,45 @@ export function EnhancedCreateProjectDialog({
     onSuccess: async (response, variables) => {
       // Close dialog first
       onOpenChange(false);
-      
+
       try {
         // Get current user details
         const currentUserId = getUserId();
         const currentToken = getToken();
-        
+
         if (currentUserId && currentToken) {
           // Call the exact same GET API that your component uses
-          const updatedProjects = await apiRequest(`/project/get/${currentUserId}`, {
-            method: "GET",
-            headers: { Authorization: `Bearer ${currentToken}` },
-          });
-          
+          const updatedProjects = await apiRequest(
+            `/project/get/${currentUserId}`,
+            {
+              method: "GET",
+              headers: { Authorization: `Bearer ${currentToken}` },
+            }
+          );
+
           // Update the cache with the exact same query key your component uses
-          queryClient.setQueryData(["builderProjects", currentUserId], updatedProjects);
+          queryClient.setQueryData(
+            ["builderProjects", currentUserId],
+            updatedProjects
+          );
         }
-        
       } catch (error) {
-        console.error('Error fetching updated projects:', error);
+        console.error("Error fetching updated projects:", error);
         // Fallback to invalidation if direct API call fails
         const currentUserId = getUserId();
         if (currentUserId) {
-          queryClient.invalidateQueries({ 
-            queryKey: ["builderProjects", currentUserId] 
+          queryClient.invalidateQueries({
+            queryKey: ["builderProjects", currentUserId],
           });
         }
       }
-      
+
       // Show success toast
       toast({
         title: "Success",
         description: "Project created successfully!",
       });
-      
+
       // Reset form
       projectForm.reset();
     },
@@ -302,38 +307,60 @@ export function EnhancedCreateProjectDialog({
         headers: { Authorization: `Bearer ${currentToken}` },
       });
     },
-    onMutate: async (newLead) => {
+    onSuccess: async (response, variables) => {
+      // Close dialog first
       onOpenChange(false);
-      const queryKey = ["leads"]; // IMPORTANT: Change this to your actual query key!
-      await queryClient.cancelQueries({ queryKey });
-      const previousLeads = queryClient.getQueryData(queryKey);
-      queryClient.setQueryData(queryKey, (old: any[] | undefined) => {
-        const optimisticLead = { ...newLead, id: `optimistic-${Date.now()}` };
-        return old ? [...old, optimisticLead] : [optimisticLead];
-      });
-      return { previousLeads, queryKey };
-    },
-    onError: (err: any, newLead, context) => {
-      if (context?.previousLeads) {
-        queryClient.setQueryData(context.queryKey, context.previousLeads);
+
+      try {
+        // Get current user details
+        const currentUserId = getUserId();
+        const currentToken = getToken();
+
+        if (currentUserId && currentToken) {
+          // Call the leads GET API to fetch updated leads
+          const updatedLeads = await apiRequest(
+            `https://homobiebackend-railway-production.up.railway.app/leads/get/${currentUserId}`,
+            {
+              method: "GET",
+              headers: {
+  "Authorization": `Bearer ${currentToken}`,
+  "Content-Type": "application/json", 
+}
+            }
+          );
+
+          // Update the cache with the exact same query key your leads component uses
+          queryClient.setQueryData(
+            ["builderLeads", currentUserId],
+            updatedLeads
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching updated leads:", error);
+        // Fallback to invalidation if direct API call fails
+        const currentUserId = getUserId();
+        if (currentUserId) {
+          queryClient.invalidateQueries({
+            queryKey: ["builderLeads", currentUserId],
+          });
+        }
       }
+
+      // Show success toast
+      toast({
+        title: "Success",
+        description: "Lead created successfully!",
+      });
+
+      // Reset form
+      leadForm.reset();
+    },
+    onError: (err: any) => {
       toast({
         title: "Error",
         description: err.message || "Failed to create lead",
         variant: "destructive",
       });
-    },
-    onSettled: (data, error, variables, context) => {
-      if (context?.queryKey) {
-        queryClient.invalidateQueries({ queryKey: context.queryKey });
-      }
-      if (!error) {
-        toast({
-          title: "Success",
-          description: "Lead created successfully!",
-        });
-        leadForm.reset();
-      }
     },
   });
 
@@ -346,11 +373,34 @@ export function EnhancedCreateProjectDialog({
   };
 
   const indianStates = [
-    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
-    "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
-    "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram",
-    "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu",
-    "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
+    "Andhra Pradesh",
+    "Arunachal Pradesh",
+    "Assam",
+    "Bihar",
+    "Chhattisgarh",
+    "Goa",
+    "Gujarat",
+    "Haryana",
+    "Himachal Pradesh",
+    "Jharkhand",
+    "Karnataka",
+    "Kerala",
+    "Madhya Pradesh",
+    "Maharashtra",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
+    "Odisha",
+    "Punjab",
+    "Rajasthan",
+    "Sikkim",
+    "Tamil Nadu",
+    "Telangana",
+    "Tripura",
+    "Uttar Pradesh",
+    "Uttarakhand",
+    "West Bengal",
   ];
 
   return (
@@ -409,32 +459,309 @@ export function EnhancedCreateProjectDialog({
                           transition={{ delay: 0.1 }}
                           className="grid grid-cols-1 md:grid-cols-2 gap-4"
                         >
-                          <FormField control={projectForm.control} name="projectName" render={({ field }) => ( <FormItem> <FormLabel className="text-white flex items-center"><Building2 className="h-4 w-4 mr-2" />Project Name</FormLabel><FormControl><Input placeholder="e.g., Green Valley Residential Complex" className="bg-white/10 border-white/20 text-white placeholder:text-white-900" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                          <FormField control={projectForm.control} name="projectType" render={({ field }) => ( <FormItem><FormLabel className="text-white">Project Type</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="bg-white/10 border-white/20 text-white"><SelectValue placeholder="Select project type" /></SelectTrigger></FormControl><SelectContent><SelectItem value="Residential">Residential</SelectItem><SelectItem value="Commercial">Commercial</SelectItem><SelectItem value="Mixed Use">Mixed Use</SelectItem><SelectItem value="Luxury">Luxury</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
-                          <FormField control={projectForm.control} name="units" render={({ field }) => ( <FormItem><FormLabel className="text-white">Total Units</FormLabel><FormControl><Input type="number" placeholder="150" className="bg-white/10 border-white/20 text-white placeholder:text-gray-400" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                          <FormField control={projectForm.control} name="budget" render={({ field }) => ( <FormItem><FormLabel className="text-white flex items-center"><IndianRupeeIcon className="h-4 w-4 mr-2" />Budget (₹)</FormLabel><FormControl><Input type="number" placeholder="50000000" className="bg-white/10 border-white/20 text-white placeholder:text-gray-400" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                          <FormField control={projectForm.control} name="completedAt" render={({ field }) => ( <FormItem><FormLabel className="text-white flex items-center"><Calendar className="h-4 w-4 mr-2" />Completion Date</FormLabel><FormControl><Input type="date" className="bg-white/10 border-white/20 text-white" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                          <FormField
+                            control={projectForm.control}
+                            name="projectName"
+                            render={({ field }) => (
+                              <FormItem>
+                                {" "}
+                                <FormLabel className="text-white flex items-center">
+                                  <Building2 className="h-4 w-4 mr-2" />
+                                  Project Name
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="e.g., Green Valley Residential Complex"
+                                    className="bg-white/10 border-white/20 text-white placeholder:text-white-900"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={projectForm.control}
+                            name="projectType"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-white">
+                                  Project Type
+                                </FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                                      <SelectValue placeholder="Select project type" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="Residential">
+                                      Residential
+                                    </SelectItem>
+                                    <SelectItem value="Commercial">
+                                      Commercial
+                                    </SelectItem>
+                                    <SelectItem value="Mixed Use">
+                                      Mixed Use
+                                    </SelectItem>
+                                    <SelectItem value="Luxury">
+                                      Luxury
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={projectForm.control}
+                            name="units"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-white">
+                                  Total Units
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    placeholder="150"
+                                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={projectForm.control}
+                            name="budget"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-white flex items-center">
+                                  <IndianRupeeIcon className="h-4 w-4 mr-2" />
+                                  Budget (₹)
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    placeholder="50000000"
+                                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={projectForm.control}
+                            name="completedAt"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-white flex items-center">
+                                  <Calendar className="h-4 w-4 mr-2" />
+                                  Completion Date
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="date"
+                                    className="bg-white/10 border-white/20 text-white"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
                         </motion.div>
 
-                        <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.15 }} className="space-y-4">
-                          <h3 className="text-white text-lg font-medium flex items-center"><MapPin className="h-5 w-5 mr-2" />Location Details</h3>
+                        <motion.div
+                          initial={{ x: -20, opacity: 0 }}
+                          animate={{ x: 0, opacity: 1 }}
+                          transition={{ delay: 0.15 }}
+                          className="space-y-4"
+                        >
+                          <h3 className="text-white text-lg font-medium flex items-center">
+                            <MapPin className="h-5 w-5 mr-2" />
+                            Location Details
+                          </h3>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <FormField control={projectForm.control} name="addressLine1" render={({ field }) => ( <FormItem><FormLabel className="text-white">Address Line 1</FormLabel><FormControl><Input placeholder="e.g., 123 Main Street" className="bg-white/10 border-white/20 text-white placeholder:text-gray-400" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                            <FormField control={projectForm.control} name="addressLine2" render={({ field }) => ( <FormItem><FormLabel className="text-white">Address Line 2 (Optional)</FormLabel><FormControl><Input placeholder="e.g., Near City Center" className="bg-white/10 border-white/20 text-white placeholder:text-gray-400" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                            <FormField control={projectForm.control} name="landmark" render={({ field }) => ( <FormItem><FormLabel className="text-white">Landmark (Optional)</FormLabel><FormControl><Input placeholder="e.g., Opposite Central Park" className="bg-white/10 border-white/20 text-white placeholder:text-gray-400" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                            <FormField control={projectForm.control} name="city" render={({ field }) => ( <FormItem><FormLabel className="text-white">City</FormLabel><FormControl><Input placeholder="e.g., Mumbai" className="bg-white/10 border-white/20 text-white placeholder:text-gray-400" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                            <FormField control={projectForm.control} name="state" render={({ field }) => ( <FormItem><FormLabel className="text-white">State</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="bg-white/10 border-white/20 text-white"><SelectValue placeholder="Select state" /></SelectTrigger></FormControl><SelectContent>{indianStates.map((state) => (<SelectItem key={state} value={state}>{state}</SelectItem>))}</SelectContent></Select><FormMessage /></FormItem>)} />
-                            <FormField control={projectForm.control} name="pincode" render={({ field }) => ( <FormItem><FormLabel className="text-white">Pincode</FormLabel><FormControl><Input placeholder="400001" className="bg-white/10 border-white/20 text-white placeholder:text-gray-400" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                            <FormField
+                              control={projectForm.control}
+                              name="addressLine1"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">
+                                    Address Line 1
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="e.g., 123 Main Street"
+                                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={projectForm.control}
+                              name="addressLine2"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">
+                                    Address Line 2 (Optional)
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="e.g., Near City Center"
+                                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={projectForm.control}
+                              name="landmark"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">
+                                    Landmark (Optional)
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="e.g., Opposite Central Park"
+                                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={projectForm.control}
+                              name="city"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">
+                                    City
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="e.g., Mumbai"
+                                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={projectForm.control}
+                              name="state"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">
+                                    State
+                                  </FormLabel>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                                        <SelectValue placeholder="Select state" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {indianStates.map((state) => (
+                                        <SelectItem key={state} value={state}>
+                                          {state}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={projectForm.control}
+                              name="pincode"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">
+                                    Pincode
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="400001"
+                                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
                           </div>
                         </motion.div>
 
-                        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
-                          <FormField control={projectForm.control} name="description" render={({ field }) => ( <FormItem><FormLabel className="text-white">Description (Optional)</FormLabel><FormControl><Textarea placeholder="A modern residential complex featuring eco-friendly apartments..." className="bg-white/10 border-white/20 text-white placeholder:text-gray-400" rows={3} {...field} /></FormControl><FormMessage /></FormItem>)} />
+                        <motion.div
+                          initial={{ y: 20, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          transition={{ delay: 0.2 }}
+                        >
+                          <FormField
+                            control={projectForm.control}
+                            name="description"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-white">
+                                  Description (Optional)
+                                </FormLabel>
+                                <FormControl>
+                                  <Textarea
+                                    placeholder="A modern residential complex featuring eco-friendly apartments..."
+                                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                                    rows={3}
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
                         </motion.div>
-                        
+
                         <DialogFooter>
-                          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="border-white/20 text-blue hover:bg-white/10">Cancel</Button>
-                          <Button type="submit" disabled={createProjectMutation.isPending} className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600">{createProjectMutation.isPending ? "Creating..." : "Create Project"}</Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                            className="border-white/20 text-blue hover:bg-white/10"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="submit"
+                            disabled={createProjectMutation.isPending}
+                            className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
+                          >
+                            {createProjectMutation.isPending
+                              ? "Creating..."
+                              : "Create Project"}
+                          </Button>
                         </DialogFooter>
                       </form>
                     </Form>
@@ -446,27 +773,227 @@ export function EnhancedCreateProjectDialog({
                         onSubmit={leadForm.handleSubmit(onLeadSubmit)}
                         className="space-y-6"
                       >
-                        <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="space-y-6">
+                        <motion.div
+                          initial={{ x: 20, opacity: 0 }}
+                          animate={{ x: 0, opacity: 1 }}
+                          transition={{ delay: 0.1 }}
+                          className="space-y-6"
+                        >
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <FormField control={leadForm.control} name="firstName" render={({ field }) => ( <FormItem><FormLabel className="text-white flex items-center"><Users className="h-4 w-4 mr-2" />First Name</FormLabel><FormControl><Input placeholder="e.g., John" className="bg-white/10 border-white/20 text-white placeholder:text-gray-400" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                            <FormField control={leadForm.control} name="lastName" render={({ field }) => ( <FormItem><FormLabel className="text-white">Last Name</FormLabel><FormControl><Input placeholder="e.g., Doe" className="bg-white/10 border-white/20 text-white placeholder:text-gray-400" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                            <FormField control={leadForm.control} name="email" render={({ field }) => ( <FormItem><FormLabel className="text-white flex items-center"><Mail className="h-4 w-4 mr-2" />Email Address</FormLabel><FormControl><Input type="email" placeholder="john.doe@example.com" className="bg-white/10 border-white/20 text-white placeholder:text-gray-400" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                            <FormField control={leadForm.control} name="phoneNumber" render={({ field }) => ( <FormItem><FormLabel className="text-white flex items-center"><Phone className="h-4 w-4 mr-2" />Phone Number</FormLabel><FormControl><Input placeholder="9876543210" className="bg-white/10 border-white/20 text-white placeholder:text-gray-400" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                            <FormField
+                              control={leadForm.control}
+                              name="firstName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white flex items-center">
+                                    <Users className="h-4 w-4 mr-2" />
+                                    First Name
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="e.g., John"
+                                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={leadForm.control}
+                              name="lastName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">
+                                    Last Name
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="e.g., Doe"
+                                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={leadForm.control}
+                              name="email"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white flex items-center">
+                                    <Mail className="h-4 w-4 mr-2" />
+                                    Email Address
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="email"
+                                      placeholder="john.doe@example.com"
+                                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={leadForm.control}
+                              name="phoneNumber"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white flex items-center">
+                                    <Phone className="h-4 w-4 mr-2" />
+                                    Phone Number
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="9876543210"
+                                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
                           </div>
                           <div className="space-y-4">
-                            <h3 className="text-white text-lg font-medium flex items-center"><Home className="h-5 w-5 mr-2" />Address Information</h3>
+                            <h3 className="text-white text-lg font-medium flex items-center">
+                              <Home className="h-5 w-5 mr-2" />
+                              Address Information
+                            </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                               <FormField control={leadForm.control} name="country" render={({ field }) => ( <FormItem><FormLabel className="text-white">Country</FormLabel><FormControl><Input placeholder="India" className="bg-white/10 border-white/20 text-white placeholder:text-gray-400" {...field} readOnly /></FormControl><FormMessage /></FormItem>)} />
-                               <FormField control={leadForm.control} name="state" render={({ field }) => ( <FormItem><FormLabel className="text-white">State</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="bg-white/10 border-white/20 text-white"><SelectValue placeholder="Select state" /></SelectTrigger></FormControl><SelectContent>{indianStates.map((state) => (<SelectItem key={state} value={state}>{state}</SelectItem>))}</SelectContent></Select><FormMessage /></FormItem>)} />
-                               <FormField control={leadForm.control} name="city" render={({ field }) => ( <FormItem><FormLabel className="text-white">City</FormLabel><FormControl><Input placeholder="e.g., Bhopal" className="bg-white/10 border-white/20 text-white placeholder:text-gray-400" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                               <FormField control={leadForm.control} name="pincode" render={({ field }) => ( <FormItem><FormLabel className="text-white">Pincode</FormLabel><FormControl><Input placeholder="462001" className="bg-white/10 border-white/20 text-white placeholder:text-gray-400" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                              <FormField
+                                control={leadForm.control}
+                                name="country"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-white">
+                                      Country
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        placeholder="India"
+                                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                                        {...field}
+                                        readOnly
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={leadForm.control}
+                                name="state"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-white">
+                                      State
+                                    </FormLabel>
+                                    <Select
+                                      onValueChange={field.onChange}
+                                      defaultValue={field.value}
+                                    >
+                                      <FormControl>
+                                        <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                                          <SelectValue placeholder="Select state" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        {indianStates.map((state) => (
+                                          <SelectItem key={state} value={state}>
+                                            {state}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={leadForm.control}
+                                name="city"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-white">
+                                      City
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        placeholder="e.g., Bhopal"
+                                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                                        {...field}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={leadForm.control}
+                                name="pincode"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-white">
+                                      Pincode
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        placeholder="462001"
+                                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                                        {...field}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
                             </div>
-                            <FormField control={leadForm.control} name="addressLine1" render={({ field }) => ( <FormItem><FormLabel className="text-white">Address Line</FormLabel><FormControl><Input placeholder="123 ABC Tower, MP Nagar" className="bg-white/10 border-white/20 text-white placeholder:text-gray-400" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                            <FormField
+                              control={leadForm.control}
+                              name="addressLine1"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">
+                                    Address Line
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="123 ABC Tower, MP Nagar"
+                                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
                           </div>
                         </motion.div>
                         <DialogFooter>
-                          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="border-white/20 text-blue hover:bg-white/10">Cancel</Button>
-                          <Button type="submit" disabled={createLeadMutation.isPending} className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600">{createLeadMutation.isPending ? "Creating..." : "Create Lead"}</Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                            className="border-white/20 text-blue hover:bg-white/10"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="submit"
+                            disabled={createLeadMutation.isPending}
+                            className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
+                          >
+                            {createLeadMutation.isPending
+                              ? "Creating..."
+                              : "Create Lead"}
+                          </Button>
                         </DialogFooter>
                       </form>
                     </Form>

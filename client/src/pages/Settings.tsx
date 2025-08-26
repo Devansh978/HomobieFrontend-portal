@@ -1,16 +1,28 @@
-
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Settings as SettingsIcon, User, Shield, Bell, Database } from "lucide-react";
-import { authService } from "@/lib/auth";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Settings as SettingsIcon,
+  User,
+  Shield,
+  Bell,
+  Database,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { EnhancedRoleBasedNavbar } from "@/components/layout/EnhancedRoleBasedNavbar";
+import axios from "axios";
 
 export function Settings() {
   const [settings, setSettings] = useState({
@@ -22,28 +34,78 @@ export function Settings() {
     security: {
       twoFactor: false,
       sessionTimeout: "30",
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
     },
     preferences: {
       theme: "light",
       language: "en",
       timezone: "Asia/Kolkata",
-    }
+    },
   });
 
   const { toast } = useToast();
-  const user = authService.getUser();
+  const { user, logout } = useAuth();
 
   const handleSave = async (section: string) => {
     try {
-      // API call to save settings would go here
-      toast({
-        title: "Settings saved",
-        description: `${section} settings have been updated successfully.`,
-      });
+      if (section === "Security") {
+        if (
+          !settings.security.currentPassword ||
+          !settings.security.newPassword ||
+          !settings.security.confirmPassword
+        ) {
+          toast({
+            title: "Error",
+            description: "Please fill in all password fields",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (
+          settings.security.newPassword !== settings.security.confirmPassword
+        ) {
+          toast({
+            title: "Error",
+            description: "Passwords do not match",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        //update password
+        await axios.post(
+          `https://homobiebackend-railway-production.up.railway.app/reset-password?email=${encodeURIComponent(
+            user?.email || ""
+          )}&newPassword=${encodeURIComponent(
+            settings.security.newPassword
+          )}&currentPassword=${encodeURIComponent(
+            settings.security.currentPassword
+          )}&source=web`,
+          {
+            email: user?.email,
+            newPassword: settings.security.newPassword,
+            source: "web",
+          }
+        );
+
+        toast({
+          title: "Password Updated",
+          description: "Your password has been successfully updated.",
+        });
+      } else {
+        toast({
+          title: "Settings saved",
+          description: `${section} settings have been updated successfully.`,
+        });
+      }
     } catch (error) {
+      console.error("Error updating settings:", error);
       toast({
         title: "Error",
-        description: "Failed to save settings",
+        description: "Failed to update settings",
         variant: "destructive",
       });
     }
@@ -51,6 +113,7 @@ export function Settings() {
 
   return (
     <div className="p-6 space-y-6">
+      <EnhancedRoleBasedNavbar user={user} onLogout={logout} />
       <div className="flex items-center space-x-3">
         <SettingsIcon className="h-6 w-6 text-gray-600" />
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
@@ -64,6 +127,7 @@ export function Settings() {
           <TabsTrigger value="system">System</TabsTrigger>
         </TabsList>
 
+        {/* Profile Tab */}
         <TabsContent value="profile" className="space-y-6">
           <Card>
             <CardHeader>
@@ -95,11 +159,14 @@ export function Settings() {
                 <Label htmlFor="role">Role</Label>
                 <Input id="role" value={user?.role} disabled />
               </div>
-              <Button onClick={() => handleSave("Profile")}>Save Changes</Button>
+              <Button onClick={() => handleSave("Profile")}>
+                Save Changes
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* Security Tab */}
         <TabsContent value="security" className="space-y-6">
           <Card>
             <CardHeader>
@@ -112,26 +179,30 @@ export function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <Label>Two-Factor Authentication</Label>
-                  <p className="text-sm text-gray-500">Add an extra layer of security to your account</p>
+                  <p className="text-sm text-gray-500">
+                    Add an extra layer of security to your account
+                  </p>
                 </div>
                 <Switch
                   checked={settings.security.twoFactor}
                   onCheckedChange={(checked) =>
-                    setSettings(prev => ({
+                    setSettings((prev) => ({
                       ...prev,
-                      security: { ...prev.security, twoFactor: checked }
+                      security: { ...prev.security, twoFactor: checked },
                     }))
                   }
                 />
               </div>
               <div>
-                <Label htmlFor="sessionTimeout">Session Timeout (minutes)</Label>
+                <Label htmlFor="sessionTimeout">
+                  Session Timeout (minutes)
+                </Label>
                 <Select
                   value={settings.security.sessionTimeout}
                   onValueChange={(value) =>
-                    setSettings(prev => ({
+                    setSettings((prev) => ({
                       ...prev,
-                      security: { ...prev.security, sessionTimeout: value }
+                      security: { ...prev.security, sessionTimeout: value },
                     }))
                   }
                 >
@@ -148,21 +219,63 @@ export function Settings() {
               </div>
               <div>
                 <Label htmlFor="currentPassword">Current Password</Label>
-                <Input id="currentPassword" type="password" />
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  value={settings.security.currentPassword}
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      security: {
+                        ...prev.security,
+                        currentPassword: e.target.value,
+                      },
+                    }))
+                  }
+                />
               </div>
               <div>
                 <Label htmlFor="newPassword">New Password</Label>
-                <Input id="newPassword" type="password" />
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={settings.security.newPassword}
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      security: {
+                        ...prev.security,
+                        newPassword: e.target.value,
+                      },
+                    }))
+                  }
+                />
               </div>
               <div>
                 <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                <Input id="confirmPassword" type="password" />
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={settings.security.confirmPassword}
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      security: {
+                        ...prev.security,
+                        confirmPassword: e.target.value,
+                      },
+                    }))
+                  }
+                />
               </div>
-              <Button onClick={() => handleSave("Security")}>Update Security Settings</Button>
+              <Button onClick={() => handleSave("Security")}>
+                Update Security Settings
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* Notifications Tab */}
         <TabsContent value="notifications" className="space-y-6">
           <Card>
             <CardHeader>
@@ -175,14 +288,16 @@ export function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <Label>Email Notifications</Label>
-                  <p className="text-sm text-gray-500">Receive notifications via email</p>
+                  <p className="text-sm text-gray-500">
+                    Receive notifications via email
+                  </p>
                 </div>
                 <Switch
                   checked={settings.notifications.email}
                   onCheckedChange={(checked) =>
-                    setSettings(prev => ({
+                    setSettings((prev) => ({
                       ...prev,
-                      notifications: { ...prev.notifications, email: checked }
+                      notifications: { ...prev.notifications, email: checked },
                     }))
                   }
                 />
@@ -190,14 +305,16 @@ export function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <Label>SMS Notifications</Label>
-                  <p className="text-sm text-gray-500">Receive notifications via SMS</p>
+                  <p className="text-sm text-gray-500">
+                    Receive notifications via SMS
+                  </p>
                 </div>
                 <Switch
                   checked={settings.notifications.sms}
                   onCheckedChange={(checked) =>
-                    setSettings(prev => ({
+                    setSettings((prev) => ({
                       ...prev,
-                      notifications: { ...prev.notifications, sms: checked }
+                      notifications: { ...prev.notifications, sms: checked },
                     }))
                   }
                 />
@@ -205,23 +322,28 @@ export function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <Label>Push Notifications</Label>
-                  <p className="text-sm text-gray-500">Receive push notifications in browser</p>
+                  <p className="text-sm text-gray-500">
+                    Receive push notifications in browser
+                  </p>
                 </div>
                 <Switch
                   checked={settings.notifications.push}
                   onCheckedChange={(checked) =>
-                    setSettings(prev => ({
+                    setSettings((prev) => ({
                       ...prev,
-                      notifications: { ...prev.notifications, push: checked }
+                      notifications: { ...prev.notifications, push: checked },
                     }))
                   }
                 />
               </div>
-              <Button onClick={() => handleSave("Notifications")}>Save Notification Settings</Button>
+              <Button onClick={() => handleSave("Notifications")}>
+                Save Notification Settings
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* System Tab */}
         <TabsContent value="system" className="space-y-6">
           <Card>
             <CardHeader>
@@ -236,9 +358,9 @@ export function Settings() {
                 <Select
                   value={settings.preferences.theme}
                   onValueChange={(value) =>
-                    setSettings(prev => ({
+                    setSettings((prev) => ({
                       ...prev,
-                      preferences: { ...prev.preferences, theme: value }
+                      preferences: { ...prev.preferences, theme: value },
                     }))
                   }
                 >
@@ -257,9 +379,9 @@ export function Settings() {
                 <Select
                   value={settings.preferences.language}
                   onValueChange={(value) =>
-                    setSettings(prev => ({
+                    setSettings((prev) => ({
                       ...prev,
-                      preferences: { ...prev.preferences, language: value }
+                      preferences: { ...prev.preferences, language: value },
                     }))
                   }
                 >
@@ -278,9 +400,9 @@ export function Settings() {
                 <Select
                   value={settings.preferences.timezone}
                   onValueChange={(value) =>
-                    setSettings(prev => ({
+                    setSettings((prev) => ({
                       ...prev,
-                      preferences: { ...prev.preferences, timezone: value }
+                      preferences: { ...prev.preferences, timezone: value },
                     }))
                   }
                 >
@@ -294,7 +416,9 @@ export function Settings() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button onClick={() => handleSave("System")}>Save System Settings</Button>
+              <Button onClick={() => handleSave("System")}>
+                Save System Settings
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

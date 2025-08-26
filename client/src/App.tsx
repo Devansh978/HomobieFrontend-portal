@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { Switch, Route, Redirect } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
@@ -15,7 +15,7 @@ import { RoleBasedRedirect } from "@/components/auth/RoleBasedRedirect";
 import { NotificationManager } from "@/components/ui/animated-notification";
 import { ChatbotWidget } from "@/components/dashboard/ChatbotWidget";
 
-// Pages (assuming all imports are correct)
+// Pages
 import Dashboard from "@/pages/Dashboard";
 import { FileUploadPage } from "@/pages/FileUploadPage";
 import LeadManagementPage from "@/pages/LeadManagement";
@@ -44,11 +44,9 @@ import NotificationCenter from "@/pages/NotificationCenter";
 import AssignmentManagement from "@/pages/AssignmentManagement";
 
 /**
- * A layout component for protected routes. It handles authentication,
- * role change checks, and renders the common UI layout.
- * Child routes are rendered via the <Outlet /> component.
+ * Protected layout (with navbar, background, newsletter, chatbot, etc.)
  */
-function ProtectedLayout() {
+function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading, logout } = useAuth();
   const { isNewsletterOpen, closeNewsletter } = useNewsletterModal();
   const initialRoleRef = useRef<string | null>(null);
@@ -59,9 +57,7 @@ function ProtectedLayout() {
         initialRoleRef.current = user.role;
       }
       if (initialRoleRef.current !== user.role) {
-        if (logout) {
-          logout();
-        }
+        if (logout) logout();
       }
     }
   }, [user, logout]);
@@ -75,17 +71,16 @@ function ProtectedLayout() {
   }
 
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Redirect to="/login" />;
   }
 
   return (
     <>
       <GlassBackground />
-      <GlassNavbar />
+      {/* <GlassNavbar /> */}
       <main className="pt-16 min-h-screen custom-scrollbar">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Child routes will be rendered here */}
-          <Outlet />
+          {children}
         </div>
       </main>
       <ChatbotWidget />
@@ -93,11 +88,6 @@ function ProtectedLayout() {
     </>
   );
 }
-
-/**
- * A component for public routes (e.g., login, register).
- * If a user is already logged in, it redirects them to their appropriate dashboard.
- */
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
 
@@ -109,7 +99,6 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // If a user is logged in, don't show the public page; redirect them.
   if (user) {
     return <RoleBasedRedirect />;
   }
@@ -118,7 +107,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Determines the correct dashboard URL based on the user's role.
+ * Role → dashboard mapping
  */
 function getRoleBasedRoute(role: string): string {
   const routes: Record<string, string> = {
@@ -134,72 +123,167 @@ function getRoleBasedRoute(role: string): string {
 }
 
 /**
- * A wrapper component to handle the initial redirect after login or for root access.
+ * Root redirect for "/"
  */
 function RoleBasedRedirectWrapper() {
   const { user, isLoading } = useAuth();
 
-  // Wait for auth check to complete before redirecting
   if (isLoading) {
     return (
-       <div className="min-h-screen flex items-center justify-center bg-black">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-500"></div>
       </div>
     );
   }
 
-  return <Navigate to={user ? getRoleBasedRoute(user.role) : "/login"} />;
+  return <Redirect to={user ? getRoleBasedRoute(user.role) : "/login"} />;
 }
 
-
 /**
- * Main router component that defines all application routes.
- * This version is simplified, correct, and follows best practices.
+ * Main app router 
  */
 function AppRouter() {
   return (
-    <Routes>
-      {/* Public routes accessible only to non-authenticated users */}
-      <Route path="/login" element={<PublicRoute><GlassLogin /></PublicRoute>} />
-      <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-
-      {/* Protected Routes: All routes within this element will share the ProtectedLayout */}
-      <Route element={<ProtectedLayout />}>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/upload" element={<FileUploadPage />} />
-        <Route path="/leads" element={<LeadManagementPage />} />
-        <Route path="/users" element={<UserManagement />} />
-        <Route path="/tracking" element={<Tracking />} />
-        <Route path="/timeline" element={<Tracking />} />
-        <Route path="/analytics" element={<Analytics />} />
-        <Route path="/documents" element={<DocumentManagement />} />
-        <Route path="/builder" element={<SimplifiedBuilderDashboard />} />
-        <Route path="/builder-dashboard" element={<BuilderDashboard />} />
-        <Route path="/telecaller" element={<TelecallerDashboard />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/broker" element={<BrokerDashboard />} />
-        <Route path="/ca" element={<CADashboard />} />
-        <Route path="/user" element={<UserDashboard />} />
-        <Route path="/telecaller-management" element={<TelecallerManagement />} />
-        <Route path="/banks" element={<BankManagement />} />
-        <Route path="/notifications" element={<NotificationCenter />} />
-        <Route path="/assignments" element={<AssignmentManagement />} />
-        <Route path="/audit-logs" element={<AuditLogs />} />
-        <Route path="/crm-integration" element={<CRMIntegrationStatus />} />
-        <Route path="/settings" element={<Settings />} />
+    <Switch>
+      {/* Public */}
+      <Route path="/login">
+        <PublicRoute>
+          <GlassLogin />
+        </PublicRoute>
+      </Route>
+      <Route path="/register">
+        <PublicRoute>
+          <Register />
+        </PublicRoute>
       </Route>
 
-      {/* Root redirect handles where to send users who visit "/" */}
-      <Route path="/" element={<RoleBasedRedirectWrapper />} />
+      {/* Protected */}
+      <Route path="/dashboard">
+        <ProtectedLayout>
+          <Dashboard />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/upload">
+        <ProtectedLayout>
+          <FileUploadPage />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/leads">
+        <ProtectedLayout>
+          <LeadManagementPage />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/users">
+        <ProtectedLayout>
+          <UserManagement />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/tracking">
+        <ProtectedLayout>
+          <Tracking />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/timeline">
+        <ProtectedLayout>
+          <Tracking />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/analytics">
+        <ProtectedLayout>
+          <Analytics />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/documents">
+        <ProtectedLayout>
+          <DocumentManagement />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/builder">
+        <ProtectedLayout>
+          <SimplifiedBuilderDashboard />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/builder-dashboard">
+        <ProtectedLayout>
+          <BuilderDashboard />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/telecaller">
+        <ProtectedLayout>
+          <TelecallerDashboard />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/admin">
+        <ProtectedLayout>
+          <AdminDashboard />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/broker">
+        <ProtectedLayout>
+          <BrokerDashboard />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/ca">
+        <ProtectedLayout>
+          <CADashboard />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/user">
+        <ProtectedLayout>
+          <UserDashboard />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/telecaller-management">
+        <ProtectedLayout>
+          <TelecallerManagement />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/banks">
+        <ProtectedLayout>
+          <BankManagement />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/notifications">
+        <ProtectedLayout>
+          <NotificationCenter />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/assignments">
+        <ProtectedLayout>
+          <AssignmentManagement />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/audit-logs">
+        <ProtectedLayout>
+          <AuditLogs />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/crm-integration">
+        <ProtectedLayout>
+          <CRMIntegrationStatus />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/settings">
+        <ProtectedLayout>
+          <Settings />
+        </ProtectedLayout>
+      </Route>
 
-      {/* 404 fallback for any route not matched */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+      {/* Root redirect */}
+      <Route path="/">
+        <RoleBasedRedirectWrapper />
+      </Route>
+
+      {/* 404 */}
+      <Route>
+        <NotFound />
+      </Route>
+    </Switch>
   );
 }
 
 /**
- * The main App component that sets up all the providers and the router.
+ * Main App with providers
  */
 function App() {
   return (
@@ -207,10 +291,7 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <NotificationManager />
-        {/* The useAuth hook will be available to all components within Router */}
-        
-            <AppRouter />
-        
+        <AppRouter />
       </TooltipProvider>
     </QueryClientProvider>
   );
