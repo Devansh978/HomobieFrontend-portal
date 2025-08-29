@@ -69,7 +69,7 @@ export function EnhancedRoleBasedNavbar({
         return [
           { path: "/builder", label: "Builder Portal", icon: Building2 },
           { path: "/leads", label: "Lead Management", icon: Target },
-{ path: "/analytics", label: "Analytics", icon: BarChart3 },
+          { path: "/analytics", label: "Analytics", icon: BarChart3 },
           { path: "/upload", label: "Upload Data", icon: Upload },
           ...baseItems,
         ];
