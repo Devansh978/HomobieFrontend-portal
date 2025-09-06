@@ -17,7 +17,7 @@ import { authService } from "@/lib/auth";
 import { EnhancedRoleBasedNavbar } from "@/components/layout/EnhancedRoleBasedNavbar";
 
 // --- Define your API Base URL ---
-const API_BASE_URL = "https://homobiebackend-railway-production.up.railway.app";
+const API_BASE_URL = "http://homobie.ap-south-1.elasticbeanstalk.com";
 
 // Define a type for our document object for better type safety
 type pdf = "pdf";

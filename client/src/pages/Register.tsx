@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import HomobieLogo from "/attached_assets/wmremove-transformed_-_Edited-removebg-preview.png";
 
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://homobiebackend-railway-production.up.railway.app';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://homobie.ap-south-1.elasticbeanstalk.com';
 
 // MODIFICATION: Added reraId to the FormData type
 type FormData = {

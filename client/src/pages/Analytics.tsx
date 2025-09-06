@@ -48,7 +48,7 @@ interface MonthlyUsersData {
   count: number;
 }
 
-const BASE_URL = "https://homobiebackend-railway-production.up.railway.app";
+const BASE_URL = "http://homobie.ap-south-1.elasticbeanstalk.com";
 
 // Updated based on backend enum values from error messages
 const STATUS_OPTIONS = ["PENDING", "CONTACTED", "QUALIFIED", "CONVERTED", "REJECTED", "NO_LOANS"];

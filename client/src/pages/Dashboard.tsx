@@ -42,7 +42,7 @@ import { ChatbotWidget } from "@/components/dashboard/ChatbotWidget";
 
 
 // --- API Configuration & Types ---
-const API_BASE_URL = "https://homobiebackend-railway-production.up.railway.app";
+const API_BASE_URL = "http://homobie.ap-south-1.elasticbeanstalk.com";
 
 // Generic types for data models
 interface LocationResponse { city: string; state: string; }

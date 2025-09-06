@@ -319,7 +319,7 @@ export function EnhancedCreateProjectDialog({
         if (currentUserId && currentToken) {
           // Call the leads GET API to fetch updated leads
           const updatedLeads = await apiRequest(
-            `https://homobiebackend-railway-production.up.railway.app/leads/get/${currentUserId}`,
+            `http://homobie.ap-south-1.elasticbeanstalk.com/leads/get/${currentUserId}`,
             {
               method: "GET",
               headers: {

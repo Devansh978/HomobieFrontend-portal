@@ -52,7 +52,7 @@ export class AuthService {
   private token: string | null = null;
   private refreshToken: string | null = null;
   private user: AuthUser | null = null;
-  private readonly baseUrl = "https://homobiebackend-railway-production.up.railway.app";
+  private readonly baseUrl = "http://homobie.ap-south-1.elasticbeanstalk.com";
   private tokenRefreshPromise: Promise<void> | null = null;
 
   constructor() {

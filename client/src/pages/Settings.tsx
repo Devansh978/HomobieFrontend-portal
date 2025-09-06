@@ -77,7 +77,7 @@ export function Settings() {
 
         //update password
         await axios.post(
-          `https://homobiebackend-railway-production.up.railway.app/reset-password?email=${encodeURIComponent(
+          `http://homobie.ap-south-1.elasticbeanstalk.com/reset-password?email=${encodeURIComponent(
             user?.email || ""
           )}&newPassword=${encodeURIComponent(
             settings.security.newPassword

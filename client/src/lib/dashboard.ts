@@ -5,7 +5,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Create axios instance with auth headers
 const api = axios.create({
-  baseURL: API_BASE_URL || 'https://homobiebackend-railway-production.up.railway.app',
+  baseURL: API_BASE_URL || 'http://homobie.ap-south-1.elasticbeanstalk.com',
 });
 
 // Add request interceptor to include auth token
